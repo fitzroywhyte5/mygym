@@ -15,6 +15,18 @@ type SelectedRoutine = {
 
 const STORAGE_KEY = "mygym:selectedRoutine";
 
+function readSelectedRoutine(): SelectedRoutine | null {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SelectedRoutine;
+    if (!parsed?.id || !parsed?.title) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 export function SelectedRoutineCard() {
   const [routine, setRoutine] = React.useState<SelectedRoutine | null>(null);
 
@@ -37,15 +49,17 @@ export function SelectedRoutineCard() {
   }, [routine?.objective]);
 
   React.useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as SelectedRoutine;
-      if (!parsed?.id || !parsed?.title) return;
-      setRoutine(parsed);
-    } catch {
-      // ignore
+    function refresh() {
+      setRoutine(readSelectedRoutine());
     }
+
+    refresh();
+    window.addEventListener("mygym:routineChanged", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener("mygym:routineChanged", refresh);
+      window.removeEventListener("storage", refresh);
+    };
   }, []);
 
   if (!routine) {
@@ -81,12 +95,21 @@ export function SelectedRoutineCard() {
             {objectiveLabel ? ` · ${objectiveLabel}` : ""}
           </div>
         </div>
-        <Link
-          href="/dashboard/rutinas"
-          className="inline-flex h-9 items-center rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white/80 hover:bg-white/10"
-        >
-          Cambiar
-        </Link>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Link
+            href="/dashboard/rutinas"
+            className="inline-flex h-9 items-center rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white/80 hover:bg-white/10"
+          >
+            Cambiar
+          </Link>
+          <button
+            type="button"
+            onClick={() => clearSelectedRoutine()}
+            className="inline-flex h-9 items-center rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white/80 hover:bg-white/10"
+          >
+            Quitar
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -103,4 +126,9 @@ export function setSelectedRoutine(r: SelectedRoutine) {
 
 export function clearSelectedRoutine() {
   window.localStorage.removeItem(STORAGE_KEY);
+  try {
+    window.dispatchEvent(new Event("mygym:routineChanged"));
+  } catch {
+    // ignore
+  }
 }

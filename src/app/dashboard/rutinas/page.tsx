@@ -5,7 +5,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-import { setSelectedRoutine } from "@/components/selected-routine-card";
+import { clearSelectedRoutine, setSelectedRoutine } from "@/components/selected-routine-card";
 
 type Gender = "hombre" | "mujer";
 type Days = 1 | 2 | 3 | 4 | 5 | 6;
@@ -32,6 +32,30 @@ type ExerciseVideo = {
   videoUrl: string;
   alternateVideoUrls?: string[];
 };
+
+type SelectedRoutine = {
+  id: string;
+  title: string;
+  daysPerWeek: number;
+  gender: Gender;
+  objective?: Objective;
+  subtitle?: string;
+  days?: Array<{ label: string; focus: string; exercises?: string[] }>;
+};
+
+const ROUTINE_KEY = "mygym:selectedRoutine";
+
+function readSelectedRoutine(): SelectedRoutine | null {
+  try {
+    const raw = window.localStorage.getItem(ROUTINE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SelectedRoutine;
+    if (!parsed?.id || !parsed?.title) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 const baseExercises = {
   fuerza_volumen: [
@@ -386,6 +410,16 @@ export default function RutinasPage() {
   );
 
   React.useEffect(() => {
+    const stored = readSelectedRoutine();
+    if (!stored) return;
+    setGender(stored.gender);
+    setDays(stored.daysPerWeek);
+    setObjective(stored.objective ?? "salud");
+    setPreviewId(stored.id);
+    setConfirmedId(stored.id);
+  }, []);
+
+  React.useEffect(() => {
     if (youtubeApiKey) return;
     let canceled = false;
     (async () => {
@@ -624,7 +658,6 @@ export default function RutinasPage() {
               onChange={(e) => {
                 setGender(e.target.value as Gender);
                 setPreviewId(null);
-                setConfirmedId(null);
                 setSelectedExercise(null);
               }}
               className="mt-1 h-10 w-full rounded-md border border-white/10 bg-black/30 px-3 text-sm text-white outline-none focus:border-white/20"
@@ -643,7 +676,6 @@ export default function RutinasPage() {
               onChange={(e) => {
                 setDays(Number(e.target.value) as Days);
                 setPreviewId(null);
-                setConfirmedId(null);
                 setSelectedExercise(null);
               }}
               className="mt-1 h-10 w-full rounded-md border border-white/10 bg-black/30 px-3 text-sm text-white outline-none focus:border-white/20"
@@ -667,7 +699,6 @@ export default function RutinasPage() {
               onChange={(e) => {
                 setObjective(e.target.value as Objective);
                 setPreviewId(null);
-                setConfirmedId(null);
                 setSelectedExercise(null);
               }}
               className="mt-1 h-10 w-full rounded-md border border-white/10 bg-black/30 px-3 text-sm text-white outline-none focus:border-white/20"
@@ -713,6 +744,18 @@ export default function RutinasPage() {
               >
                 {confirmedId === selected.id ? "Rutina confirmada" : "Confirmar rutina"}
               </button>
+              {confirmedId ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearSelectedRoutine();
+                    setConfirmedId(null);
+                  }}
+                  className="inline-flex h-10 items-center justify-center rounded-md border border-white/10 bg-white/5 px-4 text-sm font-semibold text-white/80 hover:bg-white/10"
+                >
+                  Quitar rutina
+                </button>
+              ) : null}
               <Link
                 href="/dashboard"
                 className="inline-flex h-10 items-center justify-center rounded-md border border-white/10 bg-white/5 px-4 text-sm font-semibold text-white/80 hover:bg-white/10"
