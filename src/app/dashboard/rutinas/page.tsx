@@ -11,6 +11,10 @@ type Gender = "hombre" | "mujer";
 type Days = 1 | 2 | 3 | 4 | 5 | 6;
 type Objective = "fuerza" | "volumen" | "definicion" | "salud" | "cardio";
 
+function isDays(value: unknown): value is Days {
+  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5 || value === 6;
+}
+
 type RoutineOption = {
   id: string;
   title: string;
@@ -413,7 +417,7 @@ export default function RutinasPage() {
     const stored = readSelectedRoutine();
     if (!stored) return;
     setGender(stored.gender);
-    setDays(stored.daysPerWeek);
+    setDays(isDays(stored.daysPerWeek) ? stored.daysPerWeek : 0);
     setObjective(stored.objective ?? "salud");
     setPreviewId(stored.id);
     setConfirmedId(stored.id);
