@@ -22,6 +22,8 @@ type UserProfile = {
 
 type PlanObjective = "definicion" | "volumen" | "mantenimiento";
 
+type WeekdayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
 type PlanResult = {
   pesoActual: number;
   pesoMeta: number;
@@ -265,7 +267,22 @@ type StoredPlan = {
   form: FormState;
   generated: boolean;
   lockedForm: FormState | null;
+  trainingDays?: WeekdayIndex[];
 };
+
+function isWeekdayIndex(n: unknown): n is WeekdayIndex {
+  return n === 0 || n === 1 || n === 2 || n === 3 || n === 4 || n === 5 || n === 6;
+}
+
+function normalizeTrainingDays(value: unknown): WeekdayIndex[] {
+  if (!Array.isArray(value)) return [];
+  const unique = new Set<WeekdayIndex>();
+  for (const v of value) {
+    const n = typeof v === "number" ? v : Number(v);
+    if (Number.isFinite(n) && isWeekdayIndex(n)) unique.add(n);
+  }
+  return Array.from(unique).sort((a, b) => a - b);
+}
 
 export default function PlanPage() {
   const [routine, setRoutine] = React.useState<SelectedRoutine | null>(null);
@@ -278,6 +295,8 @@ export default function PlanPage() {
   });
   const [generated, setGenerated] = React.useState(false);
   const [lockedForm, setLockedForm] = React.useState<FormState | null>(null);
+  const [trainingDays, setTrainingDays] = React.useState<WeekdayIndex[]>([]);
+  const [trainingDaysError, setTrainingDaysError] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
 
@@ -289,6 +308,7 @@ export default function PlanPage() {
     if (storedPlan) {
       setGenerated(Boolean(storedPlan.generated));
       setLockedForm(storedPlan.lockedForm ?? null);
+      setTrainingDays(normalizeTrainingDays((storedPlan as StoredPlan).trainingDays));
       setForm((prev) => ({
         pesoActual: String(storedPlan.form?.pesoActual ?? prev.pesoActual ?? ""),
         pesoMeta: String(storedPlan.form?.pesoMeta ?? prev.pesoMeta ?? ""),
@@ -323,7 +343,35 @@ export default function PlanPage() {
     };
   }, []);
 
-  const planReady = Boolean(form.pesoActual.trim() && form.pesoMeta.trim() && form.estatura.trim() && form.edad.trim());
+  React.useEffect(() => {
+    const max = routine?.daysPerWeek ?? 0;
+    if (!max) return;
+    setTrainingDays((prev) => {
+      if (prev.length <= max) return prev;
+      const next = prev.slice(0, max);
+      try {
+        const stored: StoredPlan = {
+          form,
+          generated,
+          lockedForm,
+          trainingDays: next,
+        };
+        window.localStorage.setItem(PLAN_KEY, JSON.stringify(stored));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }, [routine?.daysPerWeek, form, generated, lockedForm]);
+
+  const maxTrainingDays = routine?.daysPerWeek ?? 0;
+  const planReady = Boolean(
+    form.pesoActual.trim() &&
+      form.pesoMeta.trim() &&
+      form.estatura.trim() &&
+      form.edad.trim() &&
+      (!maxTrainingDays || trainingDays.length === maxTrainingDays),
+  );
 
   const resultado = React.useMemo(() => {
     if (!generated) return null;
@@ -438,7 +486,7 @@ export default function PlanPage() {
     setForm((f) => {
       const next = { ...f, [key]: value };
       try {
-        const stored: StoredPlan = { form: next, generated: false, lockedForm: null };
+        const stored: StoredPlan = { form: next, generated: false, lockedForm: null, trainingDays };
         window.localStorage.setItem(PLAN_KEY, JSON.stringify(stored));
       } catch {
         // ignore
@@ -449,15 +497,50 @@ export default function PlanPage() {
 
   function persistStored(nextForm: FormState, nextGenerated: boolean, nextLocked: FormState | null) {
     try {
-      const stored: StoredPlan = { form: nextForm, generated: nextGenerated, lockedForm: nextLocked };
+      const stored: StoredPlan = {
+        form: nextForm,
+        generated: nextGenerated,
+        lockedForm: nextLocked,
+        trainingDays,
+      };
       window.localStorage.setItem(PLAN_KEY, JSON.stringify(stored));
     } catch {
       // ignore
     }
   }
 
+  function toggleTrainingDay(idx: WeekdayIndex) {
+    setTrainingDaysError(null);
+    setTrainingDays((prev) => {
+      const next = prev.includes(idx) ? prev.filter((x) => x !== idx) : [...prev, idx];
+      const max = routine?.daysPerWeek ?? 0;
+      if (!prev.includes(idx) && max && next.length > max) {
+        setTrainingDaysError(`Solo puedes seleccionar ${max} días, según tu rutina.`);
+        return prev;
+      }
+      next.sort((a, b) => a - b);
+      try {
+        const stored: StoredPlan = {
+          form,
+          generated,
+          lockedForm,
+          trainingDays: next,
+        };
+        window.localStorage.setItem(PLAN_KEY, JSON.stringify(stored));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }
+
   function generar() {
     setError(null);
+    setTrainingDaysError(null);
+
+    if (maxTrainingDays && trainingDays.length !== maxTrainingDays) {
+      return setTrainingDaysError(`Debes seleccionar exactamente ${maxTrainingDays} días de entrenamiento.`);
+    }
 
     const pesoActual = toNumber(form.pesoActual);
     const pesoMeta = toNumber(form.pesoMeta);
@@ -602,6 +685,42 @@ export default function PlanPage() {
                 className="mt-1 h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-white/20"
                 placeholder="Ej: 26"
               />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <div className="text-xs text-white/60">Días de entrenamiento</div>
+            <div className="mt-2 grid grid-cols-7 gap-2">
+              {([
+                { label: "L", idx: 0 },
+                { label: "M", idx: 1 },
+                { label: "X", idx: 2 },
+                { label: "J", idx: 3 },
+                { label: "V", idx: 4 },
+                { label: "S", idx: 5 },
+                { label: "D", idx: 6 },
+              ] as const).map((d) => {
+                const active = trainingDays.includes(d.idx);
+                return (
+                  <button
+                    key={d.idx}
+                    type="button"
+                    onClick={() => toggleTrainingDay(d.idx)}
+                    className={`h-10 rounded-md border text-sm font-semibold ${
+                      active
+                        ? "border-green-400/40 bg-green-600/20 text-white"
+                        : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                    }`}
+                    aria-pressed={active}
+                  >
+                    {d.label}
+                  </button>
+                );
+              })}
+            </div>
+            {trainingDaysError ? <div className="mt-2 text-xs text-red-200">{trainingDaysError}</div> : null}
+            <div className="mt-2 text-xs text-white/50">
+              Selecciona los días para que se marquen en el calendario de Seguimiento.
             </div>
           </div>
 

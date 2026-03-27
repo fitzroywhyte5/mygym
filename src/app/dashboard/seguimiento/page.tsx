@@ -29,7 +29,24 @@ type StoredPlan = {
     estatura: string;
     edad: string;
   } | null;
+  trainingDays?: number[];
 };
+
+type WeekdayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+function isWeekdayIndex(n: unknown): n is WeekdayIndex {
+  return n === 0 || n === 1 || n === 2 || n === 3 || n === 4 || n === 5 || n === 6;
+}
+
+function normalizeTrainingDays(value: unknown): WeekdayIndex[] {
+  if (!Array.isArray(value)) return [];
+  const unique = new Set<WeekdayIndex>();
+  for (const v of value) {
+    const n = typeof v === "number" ? v : Number(v);
+    if (Number.isFinite(n) && isWeekdayIndex(n)) unique.add(n);
+  }
+  return Array.from(unique).sort((a, b) => a - b);
+}
 
 type SeguimientoEntry = {
   fecha: string;
@@ -88,12 +105,24 @@ function toISODate(d: Date) {
   return `${y}-${m}-${day}`;
 }
 
-function pickExercisesForDate(routine: SelectedRoutine | null, selected: Date) {
+function pickExercisesForDate(routine: SelectedRoutine | null, selected: Date, trainingDays: WeekdayIndex[]) {
   const days = routine?.days;
   if (!days?.length) return { label: "", focus: "", exercises: [] as string[] };
-  const idx = dayIndexMon0(selected);
-  if (idx >= days.length) return { label: "", focus: "Descanso", exercises: [] as string[] };
-  const d = days[idx];
+
+  const weekdayIdx = dayIndexMon0(selected);
+  if (trainingDays.length) {
+    if (!trainingDays.includes(weekdayIdx as WeekdayIndex)) {
+      return { label: "", focus: "Descanso", exercises: [] as string[] };
+    }
+    const pos = trainingDays.indexOf(weekdayIdx as WeekdayIndex);
+    const d = days[pos];
+    if (!d) return { label: "", focus: "Entrenamiento", exercises: [] as string[] };
+    const exercises = d.exercises?.length ? d.exercises : [];
+    return { label: d.label, focus: d.focus, exercises };
+  }
+
+  if (weekdayIdx >= days.length) return { label: "", focus: "Descanso", exercises: [] as string[] };
+  const d = days[weekdayIdx];
   const exercises = d.exercises?.length ? d.exercises : [];
   return { label: d.label, focus: d.focus, exercises };
 }
@@ -166,6 +195,18 @@ function readPlanTargetWeightKg(): number | null {
   }
 }
 
+function readPlanTrainingDays(): WeekdayIndex[] {
+  try {
+    const raw = window.localStorage.getItem(PLAN_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return [];
+    return normalizeTrainingDays((parsed as StoredPlan).trainingDays);
+  } catch {
+    return [];
+  }
+}
+
 function readEntries(): SeguimientoEntry[] {
   try {
     const raw = window.localStorage.getItem(TRACKING_KEY);
@@ -227,6 +268,7 @@ export default function SeguimientoPage() {
   const [routine, setRoutine] = React.useState<SelectedRoutine | null>(null);
   const [pesoMeta, setPesoMeta] = React.useState<number | null>(null);
   const [entries, setEntries] = React.useState<SeguimientoEntry[]>([]);
+  const [trainingDays, setTrainingDays] = React.useState<WeekdayIndex[]>([]);
   const [savedMsg, setSavedMsg] = React.useState(false);
 
   const [calMonth, setCalMonth] = React.useState<Date>(() => startOfMonth(new Date()));
@@ -249,6 +291,7 @@ export default function SeguimientoPage() {
     setRoutine(readRoutine());
     setPesoMeta(readPlanTargetWeightKg());
     setEntries(readEntries());
+    setTrainingDays(readPlanTrainingDays());
   }, []);
 
   React.useEffect(() => {
@@ -256,6 +299,7 @@ export default function SeguimientoPage() {
       setRoutine(readRoutine());
       setPesoMeta(readPlanTargetWeightKg());
       setEntries(readEntries());
+      setTrainingDays(readPlanTrainingDays());
     }
     window.addEventListener("mygym:routineChanged", refresh);
     window.addEventListener("storage", refresh);
@@ -542,6 +586,7 @@ export default function SeguimientoPage() {
                   const iso = toISODate(d);
                   const selected = iso === selectedDateIso;
                   const hasEntry = entries.some((e) => e.fecha === iso);
+                  const plannedTraining = trainingDays.includes(dayIndexMon0(d) as WeekdayIndex);
                   return (
                     <button
                       key={iso}
@@ -556,7 +601,10 @@ export default function SeguimientoPage() {
                     >
                       <div className="flex items-center justify-between">
                         <span>{dayNum}</span>
-                        {hasEntry ? <span className="h-1.5 w-1.5 rounded-full bg-blue-400" /> : null}
+                        <span className="flex items-center gap-1">
+                          {plannedTraining ? <span className="h-1.5 w-1.5 rounded-full bg-green-400" /> : null}
+                          {hasEntry ? <span className="h-1.5 w-1.5 rounded-full bg-blue-400" /> : null}
+                        </span>
                       </div>
                     </button>
                   );
@@ -576,13 +624,32 @@ export default function SeguimientoPage() {
               <div className="mt-3 rounded-xl border border-white/10 bg-black/30 p-4">
                 {(() => {
                   const selectedDate = parseISODate(selectedDateIso) ?? new Date();
-                  const day = pickExercisesForDate(routine, selectedDate);
+                  const day = pickExercisesForDate(routine, selectedDate, trainingDays);
                   const exs = day.exercises?.length ? day.exercises : templateExercisesForFocus(day.focus);
+                  const isRest = day.focus === "Descanso";
                   return (
                     <div>
                       <div className="text-xs text-white/60">Entrenamiento</div>
                       <div className="mt-1 text-sm font-semibold">{day.focus || "—"}</div>
-                      {exs.length ? (
+                      {isRest ? (
+                        <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="text-sm font-semibold text-white">Día de descanso</div>
+                              <div className="mt-1 text-xs text-white/60">Recupera, hidrátate y duerme bien.</div>
+                            </div>
+                            <div className="relative h-10 w-10">
+                              <div className="absolute inset-0 rounded-full bg-blue-500/20 blur" />
+                              <div className="absolute left-1 top-1 h-2.5 w-2.5 animate-pulse rounded-full bg-blue-300/80" />
+                              <div className="absolute right-1 top-3 h-2 w-2 animate-pulse rounded-full bg-blue-300/60" />
+                              <div className="absolute left-4 bottom-1 h-1.5 w-1.5 animate-pulse rounded-full bg-blue-300/50" />
+                            </div>
+                          </div>
+                          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/5">
+                            <div className="h-full w-1/2 animate-pulse rounded-full bg-blue-500/30" />
+                          </div>
+                        </div>
+                      ) : exs.length ? (
                         <div className="mt-3 flex flex-wrap gap-2">
                           {exs.map((ex) => (
                             <Link
@@ -597,7 +664,9 @@ export default function SeguimientoPage() {
                       ) : (
                         <div className="mt-2 text-sm text-white/60">Descanso o ejercicios no definidos.</div>
                       )}
-                      <div className="mt-2 text-xs text-white/50">Toca un ejercicio para ver el video en Rutinas.</div>
+                      {!isRest ? (
+                        <div className="mt-2 text-xs text-white/50">Toca un ejercicio para ver el video en Rutinas.</div>
+                      ) : null}
                     </div>
                   );
                 })()}
