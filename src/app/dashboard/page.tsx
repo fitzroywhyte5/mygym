@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { Activity, BarChart3, Dumbbell, Flame, Layers3, Target, TrendingUp, Utensils } from "lucide-react";
+
 import { SelectedRoutineCard } from "@/components/selected-routine-card";
 import { VantaNetBg } from "@/components/vanta-net-bg";
 
@@ -54,28 +56,48 @@ export default async function DashboardPage() {
             className="min-w-[220px] rounded-xl border border-white/10 bg-black/30 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/5 hover:shadow-[0_18px_40px_-20px_rgba(59,130,246,0.55)] animate-floaty"
           >
             <div className="text-sm font-medium">Rutinas</div>
-            <div className="mt-2 h-20 rounded-lg border border-white/10 bg-white/5" />
+            <div className="mt-2 flex h-20 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-blue-500/20 blur" />
+                <Dumbbell className="relative h-10 w-10 text-blue-200" />
+              </div>
+            </div>
           </Link>
           <Link
             href="/dashboard/nutricion"
             className="min-w-[220px] rounded-xl border border-white/10 bg-black/30 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/5 hover:shadow-[0_18px_40px_-20px_rgba(59,130,246,0.55)] animate-floaty animate-floaty-delay-1"
           >
             <div className="text-sm font-medium">Nutrición</div>
-            <div className="mt-2 h-20 rounded-lg border border-white/10 bg-white/5" />
+            <div className="mt-2 flex h-20 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-emerald-500/20 blur" />
+                <Utensils className="relative h-10 w-10 text-emerald-200" />
+              </div>
+            </div>
           </Link>
           <Link
             href="/dashboard/seguimiento"
             className="min-w-[220px] rounded-xl border border-white/10 bg-black/30 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/5 hover:shadow-[0_18px_40px_-20px_rgba(59,130,246,0.55)] animate-floaty animate-floaty-delay-2"
           >
             <div className="text-sm font-medium">Seguimiento</div>
-            <div className="mt-2 h-20 rounded-lg border border-white/10 bg-white/5" />
+            <div className="mt-2 flex h-20 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-violet-500/20 blur" />
+                <BarChart3 className="relative h-10 w-10 text-violet-200" />
+              </div>
+            </div>
           </Link>
           <Link
             href="/dashboard/plan"
             className="min-w-[220px] rounded-xl border border-white/10 bg-black/30 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/5 hover:shadow-[0_18px_40px_-20px_rgba(59,130,246,0.55)] animate-floaty animate-floaty-delay-3"
           >
             <div className="text-sm font-medium">Plan</div>
-            <div className="mt-2 h-20 rounded-lg border border-white/10 bg-white/5" />
+            <div className="mt-2 flex h-20 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-amber-500/20 blur" />
+                <Target className="relative h-10 w-10 text-amber-200" />
+              </div>
+            </div>
           </Link>
         </div>
       </section>
@@ -85,22 +107,54 @@ export default async function DashboardPage() {
           <h2 className="text-lg font-semibold">Recomendado</h2>
         </div>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-white/10 bg-black/30 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/5 hover:shadow-[0_18px_40px_-20px_rgba(59,130,246,0.55)] animate-floaty">
+          <Link
+            href="/dashboard/rutinas?gender=hombre&days=3&objective=salud&routine=3d-full"
+            className="rounded-xl border border-white/10 bg-black/30 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/5 hover:shadow-[0_18px_40px_-20px_rgba(59,130,246,0.55)] animate-floaty"
+          >
             <div className="text-sm font-medium">Full Body</div>
-            <div className="mt-2 h-24 rounded-lg border border-white/10 bg-white/5" />
-          </div>
-          <div className="rounded-xl border border-white/10 bg-black/30 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/5 hover:shadow-[0_18px_40px_-20px_rgba(59,130,246,0.55)] animate-floaty animate-floaty-delay-1">
+            <div className="mt-2 flex h-24 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-sky-500/20 blur" />
+                <Activity className="relative h-10 w-10 text-sky-200" />
+              </div>
+            </div>
+          </Link>
+          <Link
+            href="/dashboard/rutinas?gender=hombre&days=3&objective=volumen&routine=3d-ppl"
+            className="rounded-xl border border-white/10 bg-black/30 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/5 hover:shadow-[0_18px_40px_-20px_rgba(59,130,246,0.55)] animate-floaty animate-floaty-delay-1"
+          >
             <div className="text-sm font-medium">Push / Pull / Legs</div>
-            <div className="mt-2 h-24 rounded-lg border border-white/10 bg-white/5" />
-          </div>
-          <div className="rounded-xl border border-white/10 bg-black/30 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/5 hover:shadow-[0_18px_40px_-20px_rgba(59,130,246,0.55)] animate-floaty animate-floaty-delay-2">
+            <div className="mt-2 flex h-24 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-indigo-500/20 blur" />
+                <Layers3 className="relative h-10 w-10 text-indigo-200" />
+              </div>
+            </div>
+          </Link>
+          <Link
+            href="/dashboard/rutinas?gender=hombre&days=4&objective=definicion"
+            className="rounded-xl border border-white/10 bg-black/30 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/5 hover:shadow-[0_18px_40px_-20px_rgba(59,130,246,0.55)] animate-floaty animate-floaty-delay-2"
+          >
             <div className="text-sm font-medium">Cut</div>
-            <div className="mt-2 h-24 rounded-lg border border-white/10 bg-white/5" />
-          </div>
-          <div className="rounded-xl border border-white/10 bg-black/30 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/5 hover:shadow-[0_18px_40px_-20px_rgba(59,130,246,0.55)] animate-floaty animate-floaty-delay-3">
+            <div className="mt-2 flex h-24 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-rose-500/20 blur" />
+                <Flame className="relative h-10 w-10 text-rose-200" />
+              </div>
+            </div>
+          </Link>
+          <Link
+            href="/dashboard/rutinas?gender=hombre&days=4&objective=volumen"
+            className="rounded-xl border border-white/10 bg-black/30 p-4 transition-transform duration-300 hover:-translate-y-1 hover:bg-white/5 hover:shadow-[0_18px_40px_-20px_rgba(59,130,246,0.55)] animate-floaty animate-floaty-delay-3"
+          >
             <div className="text-sm font-medium">Bulk</div>
-            <div className="mt-2 h-24 rounded-lg border border-white/10 bg-white/5" />
-          </div>
+            <div className="mt-2 flex h-24 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-lime-500/20 blur" />
+                <TrendingUp className="relative h-10 w-10 text-lime-200" />
+              </div>
+            </div>
+          </Link>
         </div>
       </section>
     </div>

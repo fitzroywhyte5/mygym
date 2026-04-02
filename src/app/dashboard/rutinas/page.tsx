@@ -424,6 +424,46 @@ export default function RutinasPage() {
   }, []);
 
   React.useEffect(() => {
+    const qpGender = String(searchParams?.get("gender") ?? "").trim();
+    const qpDays = Number(String(searchParams?.get("days") ?? ""));
+    const qpObjective = String(searchParams?.get("objective") ?? "").trim();
+    const qpRoutine = String(searchParams?.get("routine") ?? "").trim();
+
+    const hasAny = Boolean(qpGender) || Number.isFinite(qpDays) || Boolean(qpObjective) || Boolean(qpRoutine);
+    if (!hasAny) return;
+
+    if (qpGender === "hombre" || qpGender === "mujer") {
+      setGender(qpGender);
+    } else if (!gender) {
+      setGender("hombre");
+    }
+
+    if (Number.isFinite(qpDays) && isDays(qpDays)) {
+      setDays(qpDays);
+    }
+
+    if (
+      qpObjective === "fuerza" ||
+      qpObjective === "volumen" ||
+      qpObjective === "definicion" ||
+      qpObjective === "salud" ||
+      qpObjective === "cardio"
+    ) {
+      setObjective(qpObjective);
+    }
+
+    if (qpRoutine) {
+      setPreviewId(qpRoutine);
+      setConfirmedId(null);
+      setSelectedExercise(null);
+      setSelectedExerciseVideo(null);
+      setVideoError(null);
+      setVideoLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  React.useEffect(() => {
     if (youtubeApiKey) return;
     let canceled = false;
     (async () => {

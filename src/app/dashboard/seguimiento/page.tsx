@@ -116,7 +116,7 @@ function pickExercisesForDate(routine: SelectedRoutine | null, selected: Date, t
     }
     const pos = trainingDays.indexOf(weekdayIdx as WeekdayIndex);
     const d = days[pos];
-    if (!d) return { label: "", focus: "Entrenamiento", exercises: [] as string[] };
+    if (!d) return { label: "", focus: "Descanso", exercises: [] as string[] };
     const exercises = d.exercises?.length ? d.exercises : [];
     return { label: d.label, focus: d.focus, exercises };
   }
@@ -587,6 +587,10 @@ export default function SeguimientoPage() {
                   const selected = iso === selectedDateIso;
                   const hasEntry = entries.some((e) => e.fecha === iso);
                   const plannedTraining = trainingDays.includes(dayIndexMon0(d) as WeekdayIndex);
+                  const today = new Date();
+                  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                  const isPastOrToday = d.getTime() <= todayStart.getTime();
+                  const isRestDay = !hasEntry && isPastOrToday;
                   return (
                     <button
                       key={iso}
@@ -597,11 +601,17 @@ export default function SeguimientoPage() {
                           ? "border-blue-400/40 bg-blue-600/20 text-white"
                           : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
                       }`}
-                      title={hasEntry ? "Con registro" : ""}
+                      title={hasEntry ? "Con registro" : isRestDay ? "Día de descanso" : ""}
                     >
                       <div className="flex items-center justify-between">
                         <span>{dayNum}</span>
                         <span className="flex items-center gap-1">
+                          {isRestDay ? (
+                            <span className="relative inline-flex h-2.5 w-2.5 items-center justify-center">
+                              <span className="absolute inline-flex h-full w-full rounded-full bg-white/25 motion-safe:animate-ping" />
+                              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white/60" />
+                            </span>
+                          ) : null}
                           {plannedTraining ? <span className="h-1.5 w-1.5 rounded-full bg-green-400" /> : null}
                           {hasEntry ? <span className="h-1.5 w-1.5 rounded-full bg-blue-400" /> : null}
                         </span>
@@ -625,12 +635,18 @@ export default function SeguimientoPage() {
                 {(() => {
                   const selectedDate = parseISODate(selectedDateIso) ?? new Date();
                   const day = pickExercisesForDate(routine, selectedDate, trainingDays);
-                  const exs = day.exercises?.length ? day.exercises : templateExercisesForFocus(day.focus);
-                  const isRest = day.focus === "Descanso";
+                  const hasExplicitExercises = !!day.exercises?.length;
+                  const hasFocus = !!String(day.focus ?? "").trim();
+                  const isRest = !hasExplicitExercises && (!hasFocus || day.focus === "Descanso");
+                  const exs = hasExplicitExercises
+                    ? day.exercises
+                    : !isRest && hasFocus
+                      ? templateExercisesForFocus(day.focus)
+                      : [];
                   return (
                     <div>
                       <div className="text-xs text-white/60">Entrenamiento</div>
-                      <div className="mt-1 text-sm font-semibold">{day.focus || "—"}</div>
+                      <div className="mt-1 text-sm font-semibold">{isRest ? "Descanso" : day.focus || "—"}</div>
                       {isRest ? (
                         <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-4">
                           <div className="flex items-center justify-between">
