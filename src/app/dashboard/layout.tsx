@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { Search } from "lucide-react";
+
 import { signOut } from "@/app/logout/actions";
 import { UserMenu } from "@/components/user-menu";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -11,6 +13,20 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  async function searchDashboard(formData: FormData) {
+    "use server";
+
+    const rawQuery = formData.get("q");
+    const query = typeof rawQuery === "string" ? rawQuery : "";
+
+    const trimmed = query.trim();
+    if (!trimmed) {
+      redirect("/dashboard");
+    }
+
+    redirect(`/dashboard/buscar?q=${encodeURIComponent(trimmed)}`);
+  }
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -61,10 +77,22 @@ export default async function DashboardLayout({
           <div className="flex-1" />
 
           <div className="hidden w-72 md:block">
-            <input
-              placeholder="Buscar"
-              className="h-9 w-full rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-white/20"
-            />
+            <form action={searchDashboard}>
+              <div className="flex">
+                <input
+                  name="q"
+                  placeholder="Buscar"
+                  className="h-9 flex-1 rounded-l-md border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/40 outline-none focus:border-white/20"
+                />
+                <button
+                  type="submit"
+                  aria-label="Buscar"
+                  className="h-9 rounded-r-md border border-l-0 border-white/10 bg-white/5 px-3 text-sm text-white hover:bg-white/10"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </div>
+            </form>
           </div>
 
           <div className="flex items-center gap-3">

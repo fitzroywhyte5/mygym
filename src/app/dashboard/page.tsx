@@ -46,9 +46,6 @@ export default async function DashboardPage() {
       <section>
         <div className="flex items-end justify-between">
           <h2 className="text-lg font-semibold">Continuar</h2>
-          <Link className="text-sm text-white/60 hover:text-white" href="/dashboard">
-            Ver más
-          </Link>
         </div>
         <div className="mt-4 flex gap-4 overflow-x-auto pb-2">
           <Link

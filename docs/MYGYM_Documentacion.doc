@@ -1,0 +1,352 @@
+<html>
+<head>
+<meta charset="utf-8" />
+<title>MYGYM - Documento del Proyecto</title>
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.35; }
+  h1 { font-size: 20pt; }
+  h2 { font-size: 15pt; margin-top: 18pt; }
+  h3 { font-size: 13pt; margin-top: 12pt; }
+  h4 { font-size: 12pt; margin-top: 10pt; }
+  p { margin: 0 0 8pt 0; }
+  .muted { color: #444; }
+  .pagebreak { page-break-before: always; }
+  table { border-collapse: collapse; width: 100%; margin: 8pt 0; }
+  th, td { border: 1px solid #888; padding: 6pt; vertical-align: top; }
+  th { background: #f2f2f2; }
+  ul { margin: 0 0 8pt 16pt; }
+  ol { margin: 0 0 8pt 16pt; }
+  code { font-family: Consolas, 'Courier New', monospace; font-size: 10pt; }
+</style>
+</head>
+<body>
+
+<h1>MYGYM – Documento del Proyecto</h1>
+<p class="muted"><b>Tipo:</b> Aplicación web (dashboard) para rutinas, nutrición, seguimiento y plan personal.</p>
+<p class="muted"><b>Tecnologías principales:</b> Next.js (App Router), React, TailwindCSS, Supabase Auth, consumo de API externa (TheMealDB).</p>
+<p class="muted"><b>Fecha:</b> ____ / ____ / ______</p>
+<p class="muted"><b>Autor(es):</b> __________________________</p>
+
+<div class="pagebreak"></div>
+
+<h2>PRELIMINARES</h2>
+
+<h3>Control de Versiones</h3>
+<p>Para el control de versiones del proyecto MYGYM se recomienda utilizar <b>Git</b> con un repositorio remoto (por ejemplo, GitHub o GitLab). La estrategia de versionado propuesta es:</p>
+<ul>
+  <li><b>Ramas</b>:
+    <ul>
+      <li><b>main</b>: versión estable y desplegable.</li>
+      <li><b>develop</b>: integración de funcionalidades antes de pasar a producción.</li>
+      <li><b>feature/&lt;nombre&gt;</b>: nuevas funcionalidades (ej.: <code>feature/buscador</code>).</li>
+      <li><b>fix/&lt;nombre&gt;</b>: correcciones.</li>
+    </ul>
+  </li>
+  <li><b>Commits</b> (formato sugerido): <code>tipo: descripción corta</code>.
+    <ul>
+      <li><code>feat: agrega página de búsqueda</code></li>
+      <li><code>fix: corrige redirección del buscador</code></li>
+      <li><code>refactor: simplifica lectura de localStorage</code></li>
+    </ul>
+  </li>
+  <li><b>Tags / Releases</b>:
+    <ul>
+      <li><code>v1.0.0</code>: primera versión funcional (rutinas + nutrición + seguimiento + plan + buscador).</li>
+      <li><code>v1.1.0</code>: mejoras de UX, filtros, y búsquedas avanzadas.</li>
+    </ul>
+  </li>
+</ul>
+<p>Además, se recomienda el uso de un archivo <b>CHANGELOG</b> y la adopción de un flujo de revisión por Pull Request para mantener calidad de código y trazabilidad.</p>
+
+<h3>Resumen (Abstract)</h3>
+<p>MYGYM es una aplicación web orientada a la organización del entrenamiento y el bienestar físico, integrando en una sola plataforma la selección y consulta de rutinas, la recomendación de comidas y orientación nutricional, el registro de progreso y métricas (seguimiento), y la planificación de objetivos. El sistema se presenta como un dashboard con navegación clara por módulos y un buscador centralizado que permite localizar información por texto (rutinas, comidas y registros). A nivel técnico, MYGYM se implementa utilizando Next.js con React, gestión de autenticación con Supabase y consumo de una API externa para datos de comidas (TheMealDB). El enfoque del proyecto es proveer una experiencia moderna, accesible y escalable, facilitando el acceso rápido a información relevante y reduciendo la fricción del usuario al mantener sus datos y acciones principales en un entorno unificado.</p>
+
+<h2>INTRODUCCIÓN</h2>
+
+<h3>2.1 Introducción al Proyecto</h3>
+<p>En el contexto actual, muchas personas utilizan múltiples herramientas para llevar control de entrenamiento, alimentación y progreso. Esto genera dispersión de información, poca consistencia y dificultad para sostener hábitos. MYGYM surge como una solución unificada para:</p>
+<ul>
+  <li>Seleccionar y consultar rutinas en función de objetivos (volumen, definición, fuerza, salud, cardio).</li>
+  <li>Recibir recomendaciones de comidas y explorar opciones nutricionales.</li>
+  <li>Registrar y visualizar progreso mediante entradas de seguimiento (peso corporal, ejercicios, cardio, notas).</li>
+  <li>Definir y mantener un plan/objetivo (metas) que impacte en recomendaciones y seguimiento.</li>
+</ul>
+<p>El sistema se construye con una interfaz tipo dashboard que centraliza accesos, muestra información contextual (por ejemplo, rutina seleccionada) y ofrece un buscador para localizar elementos por texto.</p>
+
+<h2>OBJETIVOS</h2>
+
+<h3>3.1 Objetivo General</h3>
+<p>Desarrollar una aplicación web (MYGYM) que permita al usuario administrar en un solo entorno sus rutinas de entrenamiento, recomendaciones y consulta de nutrición, y el registro de seguimiento/progreso, facilitando la organización de objetivos y mejorando la experiencia mediante una interfaz moderna y un buscador integrado.</p>
+
+<h3>3.2 Objetivos Específicos</h3>
+<ul>
+  <li>Implementar un módulo de <b>Rutinas</b> con selección de rutina y visualización de planes por días.</li>
+  <li>Implementar un módulo de <b>Nutrición</b> que consulte comidas y presente recomendaciones según perfil y objetivo.</li>
+  <li>Implementar un módulo de <b>Seguimiento</b> para registrar entradas (peso, ejercicios, cardio, notas) y mostrar progreso.</li>
+  <li>Implementar un módulo de <b>Plan</b> para configurar objetivos y parámetros del usuario (p. ej. peso meta y días de entrenamiento).</li>
+  <li>Implementar un <b>buscador</b> que permita encontrar rutinas, comidas y registros de seguimiento por texto.</li>
+  <li>Garantizar una experiencia consistente (navegación, estilos, accesibilidad básica) y segura (sesión protegida).</li>
+</ul>
+
+<h2>SURVEY Y DESCRIPCIÓN DEL PROYECTO</h2>
+
+<h3>4.1 Planteamiento del Problema</h3>
+<p>Las personas que desean mejorar su condición física enfrentan dificultades comunes:</p>
+<ul>
+  <li><b>Fragmentación</b> de información entre aplicaciones o notas separadas (entrenamiento, dieta, peso, medidas).</li>
+  <li><b>Baja adherencia</b> por falta de claridad sobre qué hacer en el día, o por interfaces poco prácticas.</li>
+  <li><b>Escasa trazabilidad</b> del progreso: registrar es incómodo y analizar es difícil.</li>
+  <li><b>Despersonalización</b> de recomendaciones: la misma recomendación no sirve para todos los objetivos.</li>
+</ul>
+<p>MYGYM busca resolver estos problemas integrando módulos clave en un dashboard, con una navegación inmediata y un buscador que reduce el tiempo para encontrar información.</p>
+
+<h3>4.2 Descripción Funcional del Proyecto</h3>
+<p>Funcionalmente, MYGYM está compuesto por:</p>
+<ul>
+  <li><b>Inicio (Dashboard)</b>: resumen y accesos rápidos a módulos (Rutinas, Nutrición, Seguimiento, Plan). Muestra la rutina seleccionada si existe.</li>
+  <li><b>Rutinas</b>: catálogo de rutinas según días por semana, género y objetivo. Permite seleccionar una rutina y guardarla para uso en otros módulos.</li>
+  <li><b>Nutrición</b>: consulta de comidas recomendadas y exploración de detalles (ingredientes e instrucciones). Soporta traducciones/normalización de datos.</li>
+  <li><b>Seguimiento</b>: registro de entradas y cálculo de métricas (progreso de peso, fuerza, cardio, consistencia).</li>
+  <li><b>Plan</b>: configuración de metas (p. ej. peso meta) y parámetros que afectan recomendaciones y seguimiento.</li>
+  <li><b>Buscador</b>: acceso global para localizar por texto rutinas, comidas y registros de seguimiento.</li>
+</ul>
+
+<h3>4.3 Ámbito del Sistema</h3>
+<p><b>Incluye</b>:</p>
+<ul>
+  <li>Gestión de sesión (inicio de sesión y protección de rutas del dashboard).</li>
+  <li>Interfaz web responsive (en especial desde tamaños <code>md</code> en adelante).</li>
+  <li>Persistencia local (por ejemplo, rutina seleccionada y registros de seguimiento).</li>
+  <li>Integración con API externa para comidas (TheMealDB).</li>
+</ul>
+<p><b>No incluye</b> (en la versión actual):</p>
+<ul>
+  <li>Gestión completa de base de datos para rutinas/seguimiento (más allá de lo local o lo que se decida migrar).</li>
+  <li>Pagos, suscripciones o componentes comerciales.</li>
+  <li>Entrenamientos en tiempo real con cronómetro/series (posible futuro).</li>
+</ul>
+
+<h2>ESPECIFICACIÓN DE REQUISITOS</h2>
+
+<h3>5.1 Lista de Requisitos de Usuario</h3>
+
+<h4>5.1.1 Requisitos Funcionales</h4>
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Requisito</th>
+    <th>Descripción</th>
+    <th>Prioridad</th>
+  </tr>
+  <tr>
+    <td>RF-01</td>
+    <td>Autenticación</td>
+    <td>El usuario debe poder iniciar sesión y acceder al dashboard únicamente si está autenticado.</td>
+    <td>Alta</td>
+  </tr>
+  <tr>
+    <td>RF-02</td>
+    <td>Navegación por módulos</td>
+    <td>El usuario debe navegar a Rutinas, Nutrición, Seguimiento y Plan desde el menú principal.</td>
+    <td>Alta</td>
+  </tr>
+  <tr>
+    <td>RF-03</td>
+    <td>Selección de rutina</td>
+    <td>El usuario debe seleccionar una rutina y mantenerla como “Rutina seleccionada”.</td>
+    <td>Alta</td>
+  </tr>
+  <tr>
+    <td>RF-04</td>
+    <td>Consulta de comidas</td>
+    <td>El usuario debe poder ver comidas recomendadas y consultar información relevante (nombre, imagen, ingredientes e instrucciones cuando aplique).</td>
+    <td>Media</td>
+  </tr>
+  <tr>
+    <td>RF-05</td>
+    <td>Registro de seguimiento</td>
+    <td>El usuario debe registrar entradas (fecha, peso, ejercicio, peso levantado, series/reps, cardio, notas) y ver métricas derivadas.</td>
+    <td>Alta</td>
+  </tr>
+  <tr>
+    <td>RF-06</td>
+    <td>Plan/Objetivo</td>
+    <td>El usuario debe definir metas (p. ej. peso meta) y parámetros que se reflejen en recomendaciones y seguimiento.</td>
+    <td>Media</td>
+  </tr>
+  <tr>
+    <td>RF-07</td>
+    <td>Búsqueda por texto</td>
+    <td>El usuario debe buscar por texto y obtener resultados relacionados a rutinas, comidas y seguimiento.</td>
+    <td>Alta</td>
+  </tr>
+  <tr>
+    <td>RF-08</td>
+    <td>Salir de la sesión</td>
+    <td>El usuario debe cerrar sesión de forma explícita mediante un botón de “Sign out”.</td>
+    <td>Alta</td>
+  </tr>
+</table>
+
+<h4>5.1.2 Requisitos No Funcionales</h4>
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Requisito</th>
+    <th>Descripción</th>
+    <th>Métrica/Validación</th>
+  </tr>
+  <tr>
+    <td>RNF-01</td>
+    <td>Usabilidad</td>
+    <td>La interfaz debe ser clara, consistente y con accesos rápidos a funciones principales.</td>
+    <td>Pruebas con usuario, checklist de UX.</td>
+  </tr>
+  <tr>
+    <td>RNF-02</td>
+    <td>Rendimiento</td>
+    <td>La navegación del dashboard debe sentirse fluida y cargar rápido en condiciones normales.</td>
+    <td>Tiempos de respuesta percibidos; medición con Lighthouse.</td>
+  </tr>
+  <tr>
+    <td>RNF-03</td>
+    <td>Seguridad</td>
+    <td>Las rutas del dashboard deben estar protegidas por sesión válida (sin usuario, redirigir a login).</td>
+    <td>Prueba: acceso directo a /dashboard sin sesión debe redirigir.</td>
+  </tr>
+  <tr>
+    <td>RNF-04</td>
+    <td>Mantenibilidad</td>
+    <td>El código debe seguir estructura modular por rutas/páginas y reutilizar componentes compartidos.</td>
+    <td>Revisión de código.</td>
+  </tr>
+  <tr>
+    <td>RNF-05</td>
+    <td>Compatibilidad</td>
+    <td>Debe funcionar en navegadores modernos (Chrome/Edge/Firefox) y adaptarse a pantallas comunes.</td>
+    <td>Pruebas de visualización y navegación.</td>
+  </tr>
+</table>
+
+<h4>5.1.3 Requisitos Futuros</h4>
+<ul>
+  <li><b>RF-F01</b>: Guardar rutinas, plan y seguimiento en base de datos por usuario (sin depender de <code>localStorage</code>).</li>
+  <li><b>RF-F02</b>: Búsqueda avanzada con filtros (por objetivo, por fecha, por tipo de comida, por categoría).</li>
+  <li><b>RF-F03</b>: Pantalla “Entrenamiento de hoy” con temporizador, sets completados y registro automático.</li>
+  <li><b>RF-F04</b>: Exportación de progreso a PDF/CSV.</li>
+</ul>
+
+<h3>5.2 Especificación de Requisitos de Software (ERS)</h3>
+
+<h4>Actores</h4>
+<ul>
+  <li><b>Usuario autenticado</b>: persona que usa el dashboard y sus módulos.</li>
+  <li><b>Sistema de autenticación (Supabase)</b>: proveedor de sesión y estado de usuario.</li>
+  <li><b>API externa (TheMealDB)</b>: fuente de datos de comidas (búsqueda por texto y detalles).</li>
+</ul>
+
+<h4>Casos de Uso (resumen)</h4>
+<table>
+  <tr>
+    <th>Código</th>
+    <th>Nombre</th>
+    <th>Actor</th>
+    <th>Descripción</th>
+    <th>Precondición</th>
+    <th>Postcondición</th>
+  </tr>
+  <tr>
+    <td>CU-01</td>
+    <td>Acceder al dashboard</td>
+    <td>Usuario</td>
+    <td>El usuario ingresa a /dashboard y ve Inicio si está autenticado.</td>
+    <td>Sesión válida</td>
+    <td>Dashboard visible</td>
+  </tr>
+  <tr>
+    <td>CU-02</td>
+    <td>Seleccionar rutina</td>
+    <td>Usuario</td>
+    <td>El usuario elige una rutina y esta se guarda como rutina seleccionada.</td>
+    <td>Sesión válida</td>
+    <td>Rutina persistida y reflejada en Inicio/Seguimiento/Nutrición</td>
+  </tr>
+  <tr>
+    <td>CU-03</td>
+    <td>Buscar contenido</td>
+    <td>Usuario</td>
+    <td>El usuario escribe un texto y el sistema muestra resultados en /dashboard/buscar.</td>
+    <td>Sesión válida</td>
+    <td>Resultados agrupados por módulo</td>
+  </tr>
+  <tr>
+    <td>CU-04</td>
+    <td>Registrar seguimiento</td>
+    <td>Usuario</td>
+    <td>El usuario crea entradas de seguimiento y el sistema calcula métricas.</td>
+    <td>Sesión válida</td>
+    <td>Entradas persistidas localmente y visibles</td>
+  </tr>
+</table>
+
+<h4>Restricciones y Suposiciones</h4>
+<ul>
+  <li>La disponibilidad de comidas depende de la conectividad y del servicio TheMealDB.</li>
+  <li>Parte de los datos del usuario pueden persistirse localmente; en escenarios multi-dispositivo esto no se sincroniza (mejora futura).</li>
+  <li>El sistema asume navegadores con soporte moderno de JavaScript y APIs como <code>localStorage</code>.</li>
+</ul>
+
+<h2>DISEÑO E INTERFACES (GUI)</h2>
+
+<h3>6.1 Especificaciones de Diseño</h3>
+<ul>
+  <li><b>Estilo visual</b>: tema oscuro con degradados y acentos (azul/verde/violeta/ámbar) para diferenciar módulos.</li>
+  <li><b>Diseño responsivo</b>: barra de navegación visible en escritorio; componentes apilables en pantallas más pequeñas.</li>
+  <li><b>Componentización</b>: uso de componentes reutilizables (por ejemplo, tarjeta de rutina seleccionada).</li>
+  <li><b>Accesibilidad básica</b>: controles con estados hover/focus, y botones con etiquetas accesibles (p. ej. botón del buscador).</li>
+</ul>
+
+<h3>6.2 Prototipos y Navegación</h3>
+<p>La navegación principal ocurre desde el header del dashboard:</p>
+<ul>
+  <li><b>Inicio</b> → <code>/dashboard</code></li>
+  <li><b>Rutinas</b> → <code>/dashboard/rutinas</code></li>
+  <li><b>Nutrición</b> → <code>/dashboard/nutricion</code></li>
+  <li><b>Seguimiento</b> → <code>/dashboard/seguimiento</code></li>
+  <li><b>Plan</b> → <code>/dashboard/plan</code></li>
+  <li><b>Búsqueda</b> → <code>/dashboard/buscar?q=...</code> (desde el input del header)</li>
+</ul>
+<p><b>Flujo típico de usuario</b>:</p>
+<ol>
+  <li>Inicia sesión y entra a Inicio.</li>
+  <li>Si no tiene rutina seleccionada, entra a Rutinas y selecciona una.</li>
+  <li>Consulta Nutrición para ver comidas recomendadas.</li>
+  <li>Registra Seguimiento al finalizar el entrenamiento (peso, ejercicio, etc.).</li>
+  <li>Usa el buscador para localizar rápidamente un elemento por texto.</li>
+</ol>
+
+<h2>CONCLUSIONES Y CIERRE</h2>
+
+<h3>7.1 Recomendaciones</h3>
+<ul>
+  <li>Migrar persistencia crítica de <code>localStorage</code> a base de datos (por usuario) para sincronización y respaldo.</li>
+  <li>Mejorar el buscador para abrir directamente el detalle del elemento encontrado (p. ej. comida específica en Nutrición).</li>
+  <li>Agregar pruebas básicas (unitarias o de integración) para funciones de normalización, lectura de datos y rutas principales.</li>
+  <li>Implementar métricas adicionales (IMC, medidas corporales, PRs por ejercicio) y reportes.</li>
+</ul>
+
+<h3>7.2 Conclusión</h3>
+<p>MYGYM consolida las principales necesidades de un usuario que busca mejorar su salud y rendimiento: entrenar con una rutina definida, alimentarse con mejores decisiones y registrar progresos. El dashboard unifica módulos fundamentales, ofrece una experiencia visual moderna y permite localizar información mediante búsqueda. La arquitectura elegida (Next.js + Supabase + consumo de API) facilita escalabilidad y mejora progresiva, permitiendo evolucionar hacia una plataforma más completa con persistencia centralizada, analítica avanzada y flujos de entrenamiento asistidos.</p>
+
+<h3>7.3 Bibliografía</h3>
+<ul>
+  <li>Next.js Documentation. https://nextjs.org/docs</li>
+  <li>React Documentation. https://react.dev/</li>
+  <li>Supabase Documentation. https://supabase.com/docs</li>
+  <li>TheMealDB API. https://www.themealdb.com/api.php</li>
+  <li>Tailwind CSS Documentation. https://tailwindcss.com/docs</li>
+  <li>Git Documentation. https://git-scm.com/doc</li>
+</ul>
+
+</body>
+</html>
